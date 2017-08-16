@@ -12,6 +12,7 @@ import com.intellij.openapi.vcs.changes.CommitExecutor;
 import com.intellij.openapi.vcs.changes.ContentRevision;
 import com.intellij.openapi.vcs.checkin.CheckinHandler;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.rt.execution.testFrameworks.ProcessBuilder;
 import com.intellij.util.PairConsumer;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,7 +41,7 @@ class PreCommitHookCheckinHandler extends CheckinHandler {
             return ReturnResult.CANCEL;
         }
 
-        VirtualFile hook = project.getBaseDir().findChild("pre-commit-hook.sh");
+        VirtualFile hook = project.getBaseDir().findChild(ProcessBuilder.isWindows ? "pre-commit-hook.bat" : "pre-commit-hook.sh");
         if (hook != null && hook.exists()) {
             try {
                 final String[] changes = getChanges();
