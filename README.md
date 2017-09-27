@@ -6,7 +6,7 @@ IntelliJ plugin that allows you to run a hook prior commiting changes to any Ver
 
 ## Usage
 
-Create a file named `pre-commit-hook.sh` in your project root, exit with non-zero code to 'fail' the commit.
+Create a file named `pre-commit-hook.sh` or `pre-commit-hook.bat` for Windows, in your project root, exit with non-zero code to 'fail' the commit.
 
 ## Known Problems
 
