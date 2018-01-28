@@ -23,6 +23,9 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <checkinHandlerFactory implementation="PreCommitCheckinHandlerFactory"  />
+    <projectConfigurable groupId="tools"
+                         displayName="Pre Commit Hook"
+                         instance="HookConfigurable" />
   </extensions>
 
 </idea-plugin>

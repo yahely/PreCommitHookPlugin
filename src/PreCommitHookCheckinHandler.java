@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 class PreCommitHookCheckinHandler extends CheckinHandler {
 
     private static final String title = "Pre Commit Hook Plugin";
-    private static final String doYouWantToCommitMessage ="Do you want to commit? \nCommit without running pre-commit-hook is not recommended.";
+    private static final String doYouWantToCommitMessage = "Do you want to commit? \nCommit without running pre-commit-hook is not recommended.";
     private final Project project;
     private final CheckinProjectPanel checkinProjectPanel;
 
@@ -41,65 +41,73 @@ class PreCommitHookCheckinHandler extends CheckinHandler {
             return ReturnResult.CANCEL;
         }
 
-        VirtualFile hook = project.getBaseDir().findChild(ProcessBuilder.isWindows ? "pre-commit-hook.bat" : "pre-commit-hook.sh");
-        if (hook != null && hook.exists()) {
-            try {
-                final String[] changes = getChanges();
-                final String command = hook.getCanonicalPath();
-
-                final String[] commandWithArguments = new String[1 + changes.length];
-                commandWithArguments[0] = command;
-                System.arraycopy(changes, 0, commandWithArguments, 1, changes.length);
-
-                final Process process = Runtime.getRuntime().exec(commandWithArguments,
-                        null,
-                        new File(project.getBaseDir().getCanonicalPath()));
-
-                final Barrier waitEvent = new Barrier(false);
-                final ProcessResult result = new ProcessResult();
-
-                final Task.Modal taskModal = new Task.Modal(project, title, true) {
-                    @Override
-                    public void run(@NotNull ProgressIndicator progressIndicator) {
-                        progressIndicator.setIndeterminate(true);
-                        progressIndicator.setText("Running pre commit hook script...");
-                        try {
-                            while(process.isAlive()){
-                                progressIndicator.checkCanceled();
-                                Thread.sleep(10);
-                            }
-                            result.setExitCode(process.waitFor());
-                        } catch (InterruptedException e) {
-                            result.setException(e);
-                        }
-                        catch(ProcessCanceledException e){
-                            result.setCanceled();
-                        }
-                        waitEvent.done();
-                    }
-                };
-                taskModal.setCancelText("Stop");
-
-                ProgressManager.getInstance().run(taskModal);
-
-                waitEvent.waitForDone();
-                if( result.isCanceled()){
-                    return onUserCancel();
-                }
-                if (result.getException() != null) {
-                    throw result.getException();
-                }
-                if (result.getExitCode() == 0) {
-                    return ReturnResult.COMMIT;
-                } else {
-                    String input = readInputStream(process.getInputStream());
-                    return showDialogToUser("Pre commit hook exited with error: \n" + input+ doYouWantToCommitMessage);
-                }
-            } catch (IOException | InterruptedException e) {
-                return onException(e);
-            }
+        final String scriptPath = HookConfigurable.getScriptPath(project);
+        final VirtualFile scriptFile;
+        if (new File(scriptPath).isAbsolute()) {
+            scriptFile = project.getBaseDir().getFileSystem().findFileByPath(scriptPath);
         } else {
-            return ReturnResult.COMMIT;
+            scriptFile = project.getBaseDir().findChild(scriptPath);
+        }
+
+        if ((scriptFile == null) || (!scriptFile.exists())) {
+            if ((scriptPath.isEmpty()) || scriptPath.equals(HookConfigurable.DEFAULT_FILE)) {
+                return ReturnResult.COMMIT;
+            }
+            return showDialogToUser("Script (" + scriptPath + ") not found.\nWould you like to commit?");
+        }
+
+        try {
+            final String[] changes = getChanges();
+
+            final String[] commandWithArguments = new String[1 + changes.length];
+            commandWithArguments[0] = scriptFile.getCanonicalPath();
+            System.arraycopy(changes, 0, commandWithArguments, 1, changes.length);
+
+            final Process process = Runtime.getRuntime().exec(commandWithArguments,
+                    null,
+                    new File(project.getBaseDir().getCanonicalPath()));
+
+            final Barrier waitEvent = new Barrier(false);
+            final ProcessResult result = new ProcessResult();
+
+            final Task.Modal taskModal = new Task.Modal(project, title, true) {
+                @Override
+                public void run(@NotNull ProgressIndicator progressIndicator) {
+                    progressIndicator.setIndeterminate(true);
+                    progressIndicator.setText("Running pre commit hook script...");
+                    try {
+                        while (process.isAlive()) {
+                            progressIndicator.checkCanceled();
+                            Thread.sleep(10);
+                        }
+                        result.setExitCode(process.waitFor());
+                    } catch (InterruptedException e) {
+                        result.setException(e);
+                    } catch (ProcessCanceledException e) {
+                        result.setCanceled();
+                    }
+                    waitEvent.done();
+                }
+            };
+            taskModal.setCancelText("Stop");
+
+            ProgressManager.getInstance().run(taskModal);
+
+            waitEvent.waitForDone();
+            if (result.isCanceled()) {
+                return onUserCancel();
+            }
+            if (result.getException() != null) {
+                throw result.getException();
+            }
+            if (result.getExitCode() == 0) {
+                return ReturnResult.COMMIT;
+            } else {
+                String input = readInputStream(process.getInputStream());
+                return showDialogToUser("Pre commit hook exited with error: \n" + input + doYouWantToCommitMessage);
+            }
+        } catch (IOException | InterruptedException e) {
+            return onException(e);
         }
     }
 
