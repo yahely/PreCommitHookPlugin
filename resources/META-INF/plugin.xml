@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>com.upsolver.PreCommitHook</id>
   <name>Pre Commit Hook Plugin</name>
-  <version>0.3.1</version>
+  <version>0.4.1</version>
   <vendor email="yahel.yechieli@gmail.com" url="https://github.com/yahely">Yahel Yechieli</vendor>
 
   <description><![CDATA[
@@ -14,6 +14,8 @@
       0.2 - Added Progress Indicator
       0.3 - Added Skip Buttons
       0.3.1 - Fixed null pointer when committing a deleted file
+      0.4.0 - Added possibility to configure a path to a script
+      0.4.1 - Fixed running non-windows script on windows (python, perl, etc.)
     ]]>
   </change-notes>
 

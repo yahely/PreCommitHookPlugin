@@ -57,11 +57,12 @@ class PreCommitHookCheckinHandler extends CheckinHandler {
         }
 
         try {
-            final String[] changes = getChanges();
+            final String[] command = getCommand(scriptFile.getCanonicalPath());
+            final String[] changedFiles = getChanges();
 
-            final String[] commandWithArguments = new String[1 + changes.length];
-            commandWithArguments[0] = scriptFile.getCanonicalPath();
-            System.arraycopy(changes, 0, commandWithArguments, 1, changes.length);
+            final String[] commandWithArguments = new String[command.length + changedFiles.length];
+            System.arraycopy(command, 0, commandWithArguments, 0, command.length);
+            System.arraycopy(changedFiles, 0, commandWithArguments, command.length, changedFiles.length);
 
             final Process process = Runtime.getRuntime().exec(commandWithArguments,
                     null,
@@ -109,6 +110,19 @@ class PreCommitHookCheckinHandler extends CheckinHandler {
         } catch (IOException | InterruptedException e) {
             return onException(e);
         }
+    }
+
+    private String[] getCommand(String scriptPath) {
+        if (ProcessBuilder.isWindows && !isWinCmd(scriptPath)) {
+            return new String[]{"cmd", "/c", scriptPath};
+        } else {
+            return new String[]{scriptPath};
+        }
+    }
+
+    private boolean isWinCmd(String scriptPath) {
+        String lowerPath = scriptPath.toLowerCase();
+        return lowerPath.endsWith(".cmd") || lowerPath.endsWith(".bat");
     }
 
     private String[] getChanges() {
