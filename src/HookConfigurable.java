@@ -4,7 +4,6 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.rt.execution.testFrameworks.ProcessBuilder;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.jetbrains.annotations.Nls;
@@ -17,7 +16,7 @@ import java.awt.*;
 public class HookConfigurable implements Configurable {
 
     private static final String PATH_KEY = "pre-commit-hook.path";
-    public static final String DEFAULT_FILE = ProcessBuilder.isWindows ? "pre-commit-hook.bat" : "pre-commit-hook.sh";
+    static final String DEFAULT_FILE = OsUtil.isWindows ? "pre-commit-hook.bat" : "pre-commit-hook.sh";
 
     private JTextField pathTextField;
     private String storedPath;

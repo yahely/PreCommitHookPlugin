@@ -12,7 +12,6 @@ import com.intellij.openapi.vcs.changes.CommitExecutor;
 import com.intellij.openapi.vcs.changes.ContentRevision;
 import com.intellij.openapi.vcs.checkin.CheckinHandler;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.rt.execution.testFrameworks.ProcessBuilder;
 import com.intellij.util.PairConsumer;
 import org.jetbrains.annotations.NotNull;
 
@@ -113,7 +112,7 @@ class PreCommitHookCheckinHandler extends CheckinHandler {
     }
 
     private String[] getCommand(String scriptPath) {
-        if (ProcessBuilder.isWindows && !isWinCmd(scriptPath)) {
+        if (OsUtil.isWindows && !isWinCmd(scriptPath)) {
             return new String[]{"cmd", "/c", scriptPath};
         } else {
             return new String[]{scriptPath};
