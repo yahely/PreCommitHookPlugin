@@ -33,13 +33,6 @@ class PreCommitHookCheckinHandler extends CheckinHandler {
     }
 
     public ReturnResult beforeCheckin(CommitExecutor executor, PairConsumer<Object, Object> additionalDataConsumer) {
-        if (DumbService.getInstance(project).isDumb()) {
-            Messages.showErrorDialog(project, "Cannot commit right now because IDE updates the indices " +
-                            "of the project in the background. Please try again later.",
-                    title);
-            return ReturnResult.CANCEL;
-        }
-
         final String scriptPath = HookConfigurable.getScriptPath(project);
         final VirtualFile scriptFile;
         if (new File(scriptPath).isAbsolute()) {
@@ -53,6 +46,13 @@ class PreCommitHookCheckinHandler extends CheckinHandler {
                 return ReturnResult.COMMIT;
             }
             return showDialogToUser("Script (" + scriptPath + ") not found.\nWould you like to commit?");
+        }
+
+        if (DumbService.getInstance(project).isDumb()) {
+            Messages.showErrorDialog(project, "Cannot commit right now because IDE updates the indices " +
+                            "of the project in the background. Please try again later.",
+                    title);
+            return ReturnResult.CANCEL;
         }
 
         try {
